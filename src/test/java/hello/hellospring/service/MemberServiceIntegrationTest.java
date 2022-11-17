@@ -1,0 +1,66 @@
+package hello.hellospring.service;
+
+import hello.hellospring.domain.Member;
+import hello.hellospring.repository.JdbcMemberRepository;
+import hello.hellospring.repository.MemberRepository;
+import hello.hellospring.repository.MemoryMemberRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+/**
+ * @author dajin kim
+ */
+@SpringBootTest
+@Transactional
+class MemberServiceIntegrationTest {
+
+    @Autowired MemberRepository memberRepository;
+    @Autowired MemberService memberService;
+
+    @Test
+    void 회원가입() {
+        // given
+        Member member = new Member();
+        member.setName("jpa");
+
+        // when
+        Long saveId = memberService.join(member);
+
+        // then
+        Member result = memberService.findOne(saveId).get();
+        assertThat(result.getName()).isEqualTo(member.getName());
+    }
+
+    @Test
+    public void 중복_회원_예외() {
+        // given
+        Member member1 = new Member();
+        member1.setName("jpa");
+
+        Member member2 = new Member();
+        member2.setName("jpa");
+
+        memberService.join(member1);
+
+/*        try {
+            memberService.join(member2);
+            fail();
+        } catch (IllegalStateException e) {
+            assertThat(e.getMessage()).isEqualTo("Already Exist Member");
+        }*/
+
+        IllegalStateException e = assertThrows(IllegalStateException.class, () -> memberService.join(member2));
+        assertThat(e.getMessage()).isEqualTo("Already Exist Member");
+
+        //assertThrows(NullPointerException.class, () -> memberService.join(member2));
+
+    }
+
+}
